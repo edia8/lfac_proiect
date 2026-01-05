@@ -1,0 +1,3 @@
+Scope: global
+  Variables:
+    x (0) = 0

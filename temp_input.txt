@@ -1,0 +1,20 @@
+remote x int4;
+remote A1 clasa;
+
+method someFunc (a: int4) {
+    remote y int4;
+    y :< a;
+}
+
+type clasa {
+    remote studenti_nr int4;
+    remote media_clasei float4;
+
+    method medie () {
+        Print(media_clasei);
+    }
+}
+
+main {
+    clasa->studenti_nr :< 25;
+}

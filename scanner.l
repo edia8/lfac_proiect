@@ -1,5 +1,5 @@
 %{
-#include    "parser.tab.h"
+#include    "parser.tab.hpp"
 #include    <stdio.h>    
 #include    <iostream>
 #include    <string>
@@ -21,8 +21,8 @@ spatiu  [ \t\r]+
 "float4" {cout<<"float"<<'\n';return FLOAT;}
 "pazvalit" {cout<<"string"<<'\n';return STRING;}
 "dublaj" { cout<<"bool"<<'\n';return BOOL;}
-"remote" {cout<<"var_declar"<<'\n';return VAR;}
-"method" {cout<<"func"<<'\n';return FUNC;}
+"remote" {cout<<"remote"<<'\n';return VAR;}
+"method" {cout<<"method"<<'\n';return FUNC;}
 
 "type" {cout<<"class"<<'\n';return CLASS;}
 "branch" {cout<<"if"<<'\n';return IF;}
@@ -45,16 +45,16 @@ spatiu  [ \t\r]+
 ">"         { cout<<"GT"<<'\n';return GT;  }
 "!"         { cout<<"NOT"<<'\n';return NOT; }
 
-{cifra}+"."{cifra}+   {/*yylval.float_val = atof(yytext);*/cout<<"number_literal"<<'\n'; return FLOAT_CONST;}
-{cifra}+              {/*yylval.int_val = atoi(yytext);*/ cout<<"number_literal"<<'\n';return INT_CONST;}
+{cifra}+"."{cifra}+   {yylval.Float = atof(yytext); cout<<"float const"<<'\n'; return FLOAT_CONST;}
+{cifra}+              {yylval.Int = atoi(yytext); cout<<"number_literal"<<'\n';return INT_CONST;}
 
-\"([^\\\"]|\\\")*\"   { /*yylval.String = new std::string(yytext);*/cout<<"string_literal"<<'\n'; return STRING_CONST; }
+\"([^\\\"]|\\\")*\"   { yylval.String = new std::string(yytext);cout<<"string_literal"<<'\n'; return STRING_CONST; }
 
-{nume}  { cout<<"var_identifier"<<'\n';return NUME; }
+{nume}  { yylval.String = new std::string(yytext); cout<<"var_identifier"<<'\n';return NUME; }
 
 {spatiu} {  }
 
-\n {yylineno++;}
+\n { }
 
 "#".* { }
 
