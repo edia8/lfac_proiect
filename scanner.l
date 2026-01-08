@@ -26,6 +26,7 @@ spatiu  [ \t\r]+
 
 "type" {cout<<"class"<<'\n';return CLASS;}
 "branch" {cout<<"if"<<'\n';return IF;}
+"trunk" {cout<<"else"<<'\n';return ELSE;}
 "rulaj_pana" {cout<<"while"<<'\n';return WHILE;}
 "stop" {cout<<"return"<<'\n';return RETURN;}
 "main" {cout<<"main"<<'\n';return MAIN_BLOCK;}

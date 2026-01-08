@@ -5,6 +5,7 @@
     #include <vector>
     #include <string>
     #include "Context.hpp"
+    #include "AST.hpp"
     using namespace std;
 }
 
@@ -42,6 +43,7 @@ SymbolTable::VariableType current_type;
     std::string* String;
     float Float;
     bool Bool;
+    class ASTNode *node;
 }
 
 // Token definitions
@@ -50,8 +52,11 @@ SymbolTable::VariableType current_type;
 %token<Float> FLOAT FLOAT_CONST
 %token<Bool> BOOL TRUE FALSE
 
-%token VAR IF WHILE RETURN MAIN_BLOCK PRINT CLASS FUNC VOID
+%token VAR IF ELSE WHILE RETURN MAIN_BLOCK PRINT CLASS FUNC VOID
 %token AND OR NOT LT LE GT GE EQ NE ATRIBUIRE SAGEATA
+
+%type<node> expr ebool var_value instruction_block
+%type<node> func_call method_call
 
 %left OR
 %left AND
@@ -60,7 +65,6 @@ SymbolTable::VariableType current_type;
 %left '+' '-'
 %left '*' '/' '%'
 %right NOT
-%right UMINUS
 
 %%
 
@@ -194,9 +198,46 @@ s_stmt : assignment
        | method_call
        | return_stmt ;
 
-if_stmt : IF expr instruction_block ;
+if_stmt : IF condition
+        {
+            // Evaluam conditia
+            SymbolTable::VariableData condRes = $2->eval(context.get_current_scope());
+            bool esteAdevarat = false;
+            
+            // Verificam daca e bool si e true
+            if(std::holds_alternative<bool>(condRes)) {
+                esteAdevarat = std::get<bool>(condRes);
+            }
+            
+            if(!esteAdevarat) {
+                // AICI E PARTEA GREA LA INTERPRETOARE IN YACC:
+                // Yacc executa codul in timp ce parseaza. 
+                // Daca vrem sa NU executam blocul de IF, avem nevoie de un flag global
+                // "execute_flag" pe care il setam pe false.
+                // Dar pentru acest exemplu, presupunem ca doar validam semantic sau evaluam tot (ceea ce nu e ideal pentru if).
+            }
+        } instruction_block 
+        | IF condition         
+        {
+            // Evaluam conditia
+            SymbolTable::VariableData condRes = $2->eval(context.get_current_scope());
+            bool esteAdevarat = false;
+            
+            // Verificam daca e bool si e true
+            if(std::holds_alternative<bool>(condRes)) {
+                esteAdevarat = std::get<bool>(condRes);
+            }
+            
+            if(!esteAdevarat) {
+                // AICI E PARTEA GREA LA INTERPRETOARE IN YACC:
+                // Yacc executa codul in timp ce parseaza. 
+                // Daca vrem sa NU executam blocul de IF, avem nevoie de un flag global
+                // "execute_flag" pe care il setam pe false.
+                // Dar pentru acest exemplu, presupunem ca doar validam semantic sau evaluam tot (ceea ce nu e ideal pentru if).
+            }
+        }instruction_block ELSE instruction_block;
 
-while_stmt : WHILE expr instruction_block ;
+while_stmt : WHILE condition instruction_block ;
 
 stmt_list : /* epsilon */
           | stmt_list stmt ;
@@ -204,38 +245,74 @@ stmt_list : /* epsilon */
 instruction_block: '{' stmt_list '}' ;
 
 
-assignment : var_value ATRIBUIRE expr ;
+assignment : var_value ATRIBUIRE expr 
+            {
+                ASTNode* assignNode = new ASTNode(":<", $1, $3);
+                //execut arborele
+                assignNode->eval(context.get_current_scope());
+                
+                delete assignNode;
+            };
 
-var_value : NUME
-          | var_value SAGEATA NUME ;
+var_value : NUME 
+            {
+                $$ = new ASTNode(*$1); //nod de tip IDENTIFIER
+            }
+          | var_value SAGEATA NUME 
+          {
+            //Nod operator ->
+            ASTNode *right = new ASTNode(*$3);
+            $$ = new ASTNode("->",$1,right);
+          };
 
 func_call : NUME '(' param_list ')'
-          | PRINT '(' expr ')' ;
+          | PRINT '(' expr ')' 
+          {
+            //eval expresie
+            SymbolTable::VariableData res = $3->eval(context.get_current_scope());
+
+            //afisam rezultatul (cu std::visit pt variant)
+            std::visit([](auto&& arg){ std::cout << arg << std::endl; }, res);
+
+            delete $3;
+            $$ = nullptr;
+          };
 
 method_call : var_value SAGEATA NUME '(' param_list ')' ;
 
-expr : expr OR expr
-     | expr AND expr
-     | expr EQ expr
-     | expr NE expr
-     | expr LT expr
-     | expr LE expr
-     | expr GT expr
-     | expr GE expr
-     | expr '+' expr
-     | expr '-' expr
-     | expr '*' expr
-     | expr '/' expr
-     | expr '%' expr
-     | '-' expr %prec UMINUS
-     | NOT expr
-     | '(' expr ')'
-     | INT_CONST
-     | FLOAT_CONST
-     | STRING_CONST
-     | TRUE
-     | FALSE
-     | var_value
+/* Ebool rules - strictly boolean operations */
+ebool : expr EQ expr {$$ = new ASTNode("==",$1, $3);}
+      | expr NE expr {$$ = new ASTNode("!=",$1, $3);}
+      | expr LT expr {$$ = new ASTNode("<",$1, $3);}
+      | expr LE expr {$$ = new ASTNode("<=",$1, $3);}
+      | expr GT expr {$$ = new ASTNode(">",$1, $3);}
+      | expr GE expr {$$ = new ASTNode(">=",$1, $3);}
+      | ebool AND ebool {$$ = new ASTNode("&&",$1, $3);}
+      | ebool OR ebool {$$ = new ASTNode("||",$1, $3);}
+      | NOT ebool {$$ = new ASTNode("!",$2 );} //sa bag constructor unar in AST.hpp
+      | '(' ebool ')'
+      | TRUE 
+      | FALSE ;
+
+/* Condition allows boolean expressions or direct variable usage */
+condition : ebool
+          | var_value
+          | func_call 
+          | method_call
+          | '(' condition ')' ;
+
+/* Main expression rule - ebool is allowed here for assignments like b := true */
+expr : ebool {$$ =  $1;}
+     | expr '+' expr {$$ = new ASTNode("+",$1, $3);}
+     | expr '-' expr {$$ = new ASTNode("-",$1, $3);}
+     | expr '*' expr {$$ = new ASTNode("*",$1, $3);}
+     | expr '/' expr {$$ = new ASTNode("/",$1, $3);}
+     | expr '%' expr {$$ = new ASTNode("%",$1, $3);}
+     | '(' expr ')' {$$ = $2;}
+     | INT_CONST { $$ = new ASTNode($1);}
+     | FLOAT_CONST { $$ = new ASTNode($1);}
+     | STRING_CONST { $$ = new ASTNode(*$1);}
+     | var_value {$$ = $1;}
      | func_call
      | method_call ;
 

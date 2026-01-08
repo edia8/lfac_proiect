@@ -1,4 +1,4 @@
-lex.yy.cpp
-parser.tab.cpp
-parser.tab.hpp
+lex.yy.c
+parser.tab.c
+parser.tab.h
 limbaj
