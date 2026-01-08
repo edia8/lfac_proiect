@@ -49,7 +49,13 @@ spatiu  [ \t\r]+
 {cifra}+"."{cifra}+   {yylval.Float = atof(yytext); cout<<"float const"<<'\n'; return FLOAT_CONST;}
 {cifra}+              {yylval.Int = atoi(yytext); cout<<"number_literal"<<'\n';return INT_CONST;}
 
-\"([^\\\"]|\\\")*\"   { yylval.String = new std::string(yytext);cout<<"string_literal"<<'\n'; return STRING_CONST; }
+\"([^\\\"]|\\\")*\"   { 
+                        std::string s(yytext);
+                        // Eliminam ghilimelele de la inceput si sfarsit pentru a pastra doar valoarea
+                        yylval.String = new std::string(s.substr(1, s.length()-2));
+                        cout<<"string_literal"<<'\n'; 
+                        return STRING_CONST; 
+                      }
 
 {nume}  { yylval.String = new std::string(yytext); cout<<"var_identifier"<<'\n';return NUME; }
 

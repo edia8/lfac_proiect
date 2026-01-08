@@ -1,0 +1,43 @@
+#Declaratii globale
+remote x int4;
+remote y int4;
+remote is_valid dublaj;
+
+main {
+    # 1. Testare atribuire si aritmetica
+    x :< 10;
+    y :< 5;
+    
+    Print("Test Aritmetica (10 + 5):");
+    Print(x + y);
+
+    Print("Test Aritmetica Complexa (10 * 5 - 2):");
+    Print(x * y - 2);
+
+    # 2. Testare logica si booleni stricti
+    # (Aici testam regula 'ebool' si 'condition')
+    is_valid :< x > y;  # 10 > 5 -> true
+    
+    Print("Test Comparatie (10 > 5, trebuie sa fie 1):");
+    Print(is_valid);
+
+    # 3. Testare IF
+    branch (is_valid) {
+        Print("Ramura IF executata corect!");
+        x :< x + 1;
+    } trunk {
+        Print("Ramura ELSE - EROARE daca apare asta");
+    }
+
+    # 4. Testare WHILE
+    Print("Test Loop (scade x pana la 8):");
+    rulaj_pana (x > 8) {
+        x :< x - 1;
+        Print(x);
+    }
+    
+    # 5. Testare asignare string
+    remote s : pazvalit;
+    s :< "Salut Lfac";
+    Print(s);
+}

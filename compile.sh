@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 # if [ $# -eq 0 ]; then
 #     FILE="limbaj"
 # else
@@ -10,9 +10,6 @@
 # g++ lex.yy.cpp parser.tab.cpp -o "$FILE" -std=c++17
 # ./"$FILE" < input.txt
 
-
-
-#!/bin/bash
 echo "1. Cleaning..."
 rm -f lex.yy.cpp parser.tab.cpp parser.tab.hpp limbaj
 
@@ -26,4 +23,4 @@ echo "4. Compiling..."
 g++ -g lex.yy.cpp parser.tab.cpp -o limbaj -std=c++17 || { echo "G++ FAILED"; exit 1; }
 
 echo "5. Running..."
-./limbaj < temp_input.txt
+./limbaj < sample.txt

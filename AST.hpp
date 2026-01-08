@@ -25,6 +25,10 @@ public:
     ASTNode(string op, ASTNode* left, ASTNode* right) 
         : root(op), left(left), right(right), node_type("OPERATOR") {}
 
+    // Constructor for Unary Operators (like NOT)
+    ASTNode(string op, ASTNode* child) 
+        : root(op), left(child), right(nullptr), node_type("OPERATOR") {}
+
     // Constructor for Variables (Identifiers)
     ASTNode(string var_name) 
         : root(var_name), left(nullptr), right(nullptr), node_type("IDENTIFIER") {}
@@ -52,14 +56,14 @@ public:
         // 2. Identifiers (Variable Lookup)
         if (node_type == "IDENTIFIER") {
             if (table) {
-                // If checking for NULL/nullptr, make sure the loopup is correct
+                // DEBUG: Print current scope and search
+                // cout << "DEBUG: Looking for var '" << root << "' in scope '" << table->name << "'" << endl;
+                
                 SymbolTable::VarSymbol* sym = table->get_var(root);
                 if (sym) {
                     return sym->data;
                 } else {
-                    // It might be a parameter or local variable not yet initialized if checking strictly declarations
-                    // But get_var traverses scopes, so if not found, it's really missing.
-                    cerr << "Error: Variable '" << root << "' not found." << endl;
+                    cerr << "Error: Variable '" << root << "' not found in scope '" << table->name << "'." << endl;
                     return get_default_val();
                 }
             }
@@ -130,10 +134,30 @@ public:
                 }
             }
 
+            // Unary Operator: NOT logic "!"
+            if (root == "!") {
+                SymbolTable::VariableData res = left ? left->eval(table) : get_default_val();
+                if (std::holds_alternative<bool>(res)) {
+                    return !std::get<bool>(res);
+                }
+                // Daca nu e bool, returnam false (sau eroare)
+                return false;
+            }
+
+            // Unary Operator: Unary Minus "-"
+            // Verificam daca e unary minus (right is null)
+            if (root == "-" && right == nullptr) {
+                SymbolTable::VariableData res = left ? left->eval(table) : get_default_val();
+                if (std::holds_alternative<int>(res)) return -std::get<int>(res);
+                if (std::holds_alternative<float>(res)) return -std::get<float>(res);
+                return res;
+            }
+
             // Binary Operations
             // Evaluate both sides first
-            SymbolTable::VariableData v1 = left->eval(table);
-            SymbolTable::VariableData v2 = right->eval(table);
+            // Check existence because unary ops might fall through if not handled above (though they are now)
+            SymbolTable::VariableData v1 = left ? left->eval(table) : get_default_val();
+            SymbolTable::VariableData v2 = right ? right->eval(table) : get_default_val();
 
             if (root == "+") return add(v1, v2);
             if (root == "-") return sub(v1, v2);

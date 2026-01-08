@@ -34,6 +34,15 @@ std::vector<std::string> temp_vars;
 std::vector<std::pair<std::string, std::string>> temp_params;
 std::string current_type_name; // Holds "INT", "FLOAT" or "MyClass"
 SymbolTable::VariableType current_type; 
+
+// Visitor pentru afisare polimorfica a valorilor
+struct Printer {
+    void operator()(int v) const { std::cout << v << std::endl; }
+    void operator()(float v) const { std::cout << v << std::endl; }
+    void operator()(bool v) const { std::cout << (v ? "true" : "false") << std::endl; }
+    void operator()(const std::string& v) const { std::cout << v << std::endl; }
+    void operator()(SymbolTable::ClassInstance* v) const { std::cout << "[Object Instance]" << std::endl; }
+};
 %}
 
 %start S
@@ -55,7 +64,7 @@ SymbolTable::VariableType current_type;
 %token VAR IF ELSE WHILE RETURN MAIN_BLOCK PRINT CLASS FUNC VOID
 %token AND OR NOT LT LE GT GE EQ NE ATRIBUIRE SAGEATA
 
-%type<node> expr ebool var_value instruction_block
+%type<node> expr ebool var_value instruction_block condition
 %type<node> func_call method_call
 
 %left OR
@@ -65,6 +74,7 @@ SymbolTable::VariableType current_type;
 %left '+' '-'
 %left '*' '/' '%'
 %right NOT
+%right UMINUS
 
 %%
 
@@ -271,8 +281,8 @@ func_call : NUME '(' param_list ')'
             //eval expresie
             SymbolTable::VariableData res = $3->eval(context.get_current_scope());
 
-            //afisam rezultatul (cu std::visit pt variant)
-            std::visit([](auto&& arg){ std::cout << arg << std::endl; }, res);
+            //afisam rezultatul folosind visitor-ul definit mai sus
+            std::visit(Printer{}, res);
 
             delete $3;
             $$ = nullptr;
@@ -290,16 +300,16 @@ ebool : expr EQ expr {$$ = new ASTNode("==",$1, $3);}
       | ebool AND ebool {$$ = new ASTNode("&&",$1, $3);}
       | ebool OR ebool {$$ = new ASTNode("||",$1, $3);}
       | NOT ebool {$$ = new ASTNode("!",$2 );} //sa bag constructor unar in AST.hpp
-      | '(' ebool ')'
-      | TRUE 
-      | FALSE ;
+      | '(' ebool ')' { $$ = $2; }
+      | TRUE { $$ = new ASTNode(true); } 
+      | FALSE { $$ = new ASTNode(false); } ;
 
 /* Condition allows boolean expressions or direct variable usage */
-condition : ebool
-          | var_value
-          | func_call 
-          | method_call
-          | '(' condition ')' ;
+condition : ebool { $$ = $1; }
+          | var_value { $$ = $1; }
+          | func_call { $$ = $1; }
+          | method_call { $$ = $1; }
+          | '(' condition ')' { $$ = $2; };
 
 /* Main expression rule - ebool is allowed here for assignments like b := true */
 expr : ebool {$$ =  $1;}
@@ -308,13 +318,20 @@ expr : ebool {$$ =  $1;}
      | expr '*' expr {$$ = new ASTNode("*",$1, $3);}
      | expr '/' expr {$$ = new ASTNode("/",$1, $3);}
      | expr '%' expr {$$ = new ASTNode("%",$1, $3);}
+     | '-' expr %prec UMINUS { $$ = new ASTNode("-", $2); }
      | '(' expr ')' {$$ = $2;}
      | INT_CONST { $$ = new ASTNode($1);}
      | FLOAT_CONST { $$ = new ASTNode($1);}
-     | STRING_CONST { $$ = new ASTNode(*$1);}
+     | STRING_CONST { 
+        // FIX: Trebuie sa cream un ASTNode de tip CONSTANT, nu IDENTIFIER
+        // Constructorul care primeste stringSimplu creeaza IDENTIFIER.
+        // Constructorul care primeste VariableData creeaza CONSTANT.
+        SymbolTable::VariableData val = *$1; 
+        $$ = new ASTNode(val); 
+     }
      | var_value {$$ = $1;}
-     | func_call
-     | method_call ;
+     | func_call { $$ = $1; }
+     | method_call { $$ = $1; } ;
 
 return_stmt: RETURN
            | RETURN expr ;

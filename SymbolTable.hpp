@@ -89,6 +89,9 @@ class SymbolTable {
             return;
         }
 
+        // DEBUG: Confirm addition
+        // std::cout << "[SymbolTable] Adding var '" << var_name << "' type '" << type_str << "' to scope '" << name << "'\n";
+
         VariableType t;
         std::string object_type = "";
 
@@ -117,8 +120,25 @@ class SymbolTable {
     }
 
     VarSymbol* get_var(const std::string& var_name) {
-        if (vars.find(var_name) != vars.end()) return &vars[var_name];
-        if (parent) return parent->get_var(var_name);
+        // 1. Cauta in scopul curent
+        if (vars.find(var_name) != vars.end()) {
+             // std::cout << "[SymbolTable] Found '" << var_name << "' in scope '" << name << "'\n";
+             return &vars[var_name];
+        }
+
+        // 2. Cauta ecursiv in parinte
+        if (parent) {
+            // std::cout << "[SymbolTable] '" << var_name << "' not in '" << name << "', checking parent '" << parent->name << "'\n";
+            return parent->get_var(var_name);
+        }
+
+        // DEBUG: If not found, list what IS available to help debug
+        // std::cerr << "[SymbolTable] Error: '" << var_name << "' not found in scope '" << name << "'. Available vars: ";
+        // for(auto const& [key, val] : vars) {
+        //     std::cerr << "'" << key << "' ";
+        // }
+        // std::cerr << "\n";
+        
         return nullptr;
     }
 
