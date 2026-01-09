@@ -1,0 +1,99 @@
+type A {
+    remote x, y int4;
+    
+    method Init() {
+        x :< 19;
+        y :< 90;
+    }
+
+    method g(z:int4) int4 {
+        stop z + 100 + x;
+    }
+}
+
+method f(z:int4) int4 {
+    remote x, b int4;
+    remote flag dublaj;
+    
+    x :< 5; 
+    b :< 10;
+
+    branch(flag == negru && x + 5 < b) {    
+        stop x + b;                      
+    }   
+    stop z * 10;
+}
+
+type B {
+    remote b, bb int4;
+    
+    method Init() {
+        b :< 5;
+        bb :< 10; 
+    }
+
+    method g(z:int4) int4 {
+        remote a A; 
+        remote x int4;
+        
+        a->Init(); 
+        x :< 100; 
+        stop x + a->x + z;
+    }
+
+    method f(z:int4) int4 {
+        stop 200 * z;
+    }
+}
+
+method bfunc(b:dublaj, s:pazvalit) pazvalit {
+    branch( b == negru ) {
+       stop s; 
+    }
+    trunk {
+        stop "bau";
+    }
+}
+
+remote fx float4;
+remote s pazvalit;
+remote ix int4;
+remote b1, b2 dublaj;
+remote obb B; 
+remote oba A; 
+
+main {       
+    fx :< 65.0;
+    fx :< fx + 10.0 * fx - 65.0;
+    Print(fx);
+
+    s :< "test";
+    Print(s);
+    s :< "otherstr";
+    Print(s);
+
+    oba->Init();
+    obb->Init();
+    
+    ix :< 10;
+    
+    ix :< ix + (ix + f(ix*4))*2 + oba->x * oba->y + oba->g(10) + obb->b * obb->bb;  
+    Print(ix);
+
+    oba->x :< f(1000);
+    oba->y :< f(100) + oba->x;
+    b2 :< negru;
+    b1 :< b2 || !b2;
+    Print(bfunc(b1, "s"));
+
+    Print(f(ix) + 5 > 5 + obb->b);
+    Print(ix+5 > ix+6);
+    Print((b1 || b2 && !b1) == rosu); 
+    Print(oba->x == oba->y);
+
+    Print(ix+5 > ix+6 || (b1 || b2 && !b1 == rosu && f(ix) + 5 > 5 + obb->b) || oba->x == oba->y);
+
+    branch(ix+2 > ix + 5 && ix + 3 > f(45*3 + ix) - 10) {
+        ix :< 100;
+    }
+}

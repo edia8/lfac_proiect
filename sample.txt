@@ -2,6 +2,7 @@
 remote x int4;
 remote y int4;
 remote is_valid dublaj;
+remote s pazvalit;
 
 main {
     # 1. Testare atribuire si aritmetica
@@ -36,8 +37,6 @@ main {
         Print(x);
     }
     
-    # 5. Testare asignare string
-    remote s : pazvalit;
     s :< "Salut Lfac";
     Print(s);
 }
