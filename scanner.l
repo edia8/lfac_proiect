@@ -11,7 +11,7 @@ void yyerror(const char *err);
 %option noyywrap
 
 cifra   [0-9]
-//nu poate incepe cu cifra
+/*nu poate incepe cu cifra*/
 nume    [a-zA-Z_][a-zA-Z0-9_]*
 spatiu  [ \t\r]+
 

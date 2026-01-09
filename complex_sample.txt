@@ -64,4 +64,5 @@ remote oba A;
 
 main {       
     obb -> b :< 10;
+    b1 :< negru;
 }
