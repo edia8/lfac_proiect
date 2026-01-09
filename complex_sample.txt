@@ -63,37 +63,5 @@ remote obb B;
 remote oba A; 
 
 main {       
-    fx :< 65.0;
-    fx :< fx + 10.0 * fx - 65.0;
-    Print(fx);
-
-    s :< "test";
-    Print(s);
-    s :< "otherstr";
-    Print(s);
-
-    oba->Init();
-    obb->Init();
-    
-    ix :< 10;
-    
-    ix :< ix + (ix + f(ix*4))*2 + oba->x * oba->y + oba->g(10) + obb->b * obb->bb;  
-    Print(ix);
-
-    oba->x :< f(1000);
-    oba->y :< f(100) + oba->x;
-    b2 :< negru;
-    b1 :< b2 || !b2;
-    Print(bfunc(b1, "s"));
-
-    Print(f(ix) + 5 > 5 + obb->b);
-    Print(ix+5 > ix+6);
-    Print((b1 || b2 && !b1) == rosu); 
-    Print(oba->x == oba->y);
-
-    Print(ix+5 > ix+6 || (b1 || b2 && !b1 == rosu && f(ix) + 5 > 5 + obb->b) || oba->x == oba->y);
-
-    branch(ix+2 > ix + 5 && ix + 3 > f(45*3 + ix) - 10) {
-        ix :< 100;
-    }
+    obb -> b :< 10;
 }

@@ -27,6 +27,13 @@ class SymbolTable {
         std::string class_name;
         std::map<std::string, VariableData> properties;
 
+        VariableData * get_proprety(std::string& name){
+            if (properties.find(name) != properties.end()) {
+                return &properties[name];
+            return nullptr;
+        }
+        }
+
         ClassInstance(std::string name) : class_name(name) {}
     };
 
@@ -44,8 +51,14 @@ class SymbolTable {
         }
 
         void operator()(ClassInstance* v) {
-            if (v)
-                fprintf(out, "[Instance of %s]", v->class_name.c_str());
+            if (v){
+                fprintf(out, "%s(", v->class_name.c_str());
+                for(auto &item : v->properties){
+                    fprintf(out, "%s = ", item.first.c_str());
+                    this -> operator()(&item.second);
+                }
+                fprintf(out, ")");
+            }
             else
                 fprintf(out, "null");
         }

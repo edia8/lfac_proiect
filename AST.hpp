@@ -175,17 +175,7 @@ public:
             if (root == "<=") return le(v1, v2);
             if (root == ">=") return ge(v1, v2);
             
-            // Pointer/Object access "->"
-            if (root == "->") {
-                 // v1 is the object instance
-                 // v2 .. wait, evaluating right side of -> (the field name) as a variable might fail if it's not a standalone var.
-                 // The right child of "->" is usually an ID, but it shouldn't be evaluated as a variable in the scope. 
-                 // It should be treated as a string literal field name.
-                 // HOWEVER, our eval recursively evaluates children.
-                 // We should specialized check for "->" to NOT evaluate the right child if it is just a field name.
-                 
-                 // CORRECTION: Re-implementing "->" logic to avoid evaluating right child as a scope variable
-            }
+          
         }
         
         return get_default_val();

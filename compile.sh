@@ -23,4 +23,4 @@ echo "4. Compiling..."
 g++ -g lex.yy.cpp parser.tab.cpp -o limbaj -std=c++17 || { echo "G++ FAILED"; exit 1; }
 
 echo "5. Running..."
-./limbaj < sample.txt
+./limbaj < complex_sample.txt

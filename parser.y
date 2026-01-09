@@ -244,11 +244,18 @@ assignment : var_value ATRIBUIRE expr
 
 var_value : NUME 
             {
+                if(!context.get_current_scope()->get_var(*$1)){
+                    std::cout<<"Variable not found\n";
+                    YYABORT;
+                }
                 $$ = new ASTNode(*$1); 
             }
           | var_value SAGEATA NUME 
             {
+                
+                SymbolTable::VarSymbol* var = context.get_current_scope()->get_var(*$<String>1);
                 ASTNode *right = new ASTNode(*$3);
+
                 $$ = new ASTNode("->", $1, right);
             };
 
