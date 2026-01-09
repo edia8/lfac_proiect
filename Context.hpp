@@ -13,7 +13,7 @@ public:
         current_scope = global_scope;
     }
 
-    // Enter a manually created scope (for funcs/classes)
+    // manually created scope (for funcs/classes)
     void enter_scope(SymbolTable *child_scope) {
         current_scope->add_child_scope(child_scope);
         current_scope = child_scope;

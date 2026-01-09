@@ -199,26 +199,17 @@ stmt : s_stmt ';'
 s_stmt : assignment
        | func_call
        {
-           // Func call as statement (return value ignored)
-           // We need to execute it if it's an ASTNode
-           // But since AST logic is mixed, we assume func_call logic runs inside its rule
+           // Func call as statement (return ignored value)
            if($1) delete $1; 
        }
        | method_call
        | return_stmt ;
 
-/* IF STATEMENT - Simplified for parsing correctness */
-/* Note: Evaluating logic inside parsing for IF/ELSE is tricky because 
-   both branches are parsed. Standard approach is building AST node for IF 
-   and evaluating later. Here we stick to structure. */
+//if block is evalueted whenever 
 if_stmt : IF expr instruction_block %prec LOWER_THAN_ELSE
         {
-             // Eval logic here would execute AFTER the block is parsed (which is too late to prevent execution)
-             // or BEFORE (which cannot see the block).
-             // For this hybrid parser, we usually just accept that both run or 
-             // use a global flag "executing" that the block checks.
+             // Eval logic 
              SymbolTable::VariableData condRes = $2->eval(context.get_current_scope());
-             // Logic handling...
              delete $2;
         }
         | IF expr instruction_block ELSE instruction_block 
@@ -234,7 +225,6 @@ stmt_list : /* epsilon */
 
 instruction_block: '{' stmt_list '}' ;
 
-/* Assignment */
 assignment : var_value ATRIBUIRE expr 
             {
                 ASTNode* assignNode = new ASTNode(":<", $1, $3);
@@ -259,11 +249,10 @@ var_value : NUME
                 $$ = new ASTNode("->", $1, right);
             };
 
-/* Function Calls */
 func_call : NUME '(' param_list ')'
           {
-              // Create AST node for generic function call
-              // Since param_list logic fills a vector, you might need to handle args here
+              // AST Node for generic function calls
+              // Since param_list logic fills a vector
               // For now, creating a dummy node to satisfy type requirements
               $$ = new ASTNode("CALL", new ASTNode(*$1), nullptr); 
           }
@@ -277,7 +266,7 @@ func_call : NUME '(' param_list ')'
 
 method_call : var_value SAGEATA NUME '(' param_list ')' { $$ = nullptr; } ;
 
-/* UNIFIED EXPRESSION RULE (Removes Reduce/Reduce Conflicts) */
+//expression role
 expr : expr EQ expr     { $$ = new ASTNode("==", $1, $3); }
      | expr NE expr     { $$ = new ASTNode("!=", $1, $3); }
      | expr LT expr     { $$ = new ASTNode("<", $1, $3); }
@@ -314,7 +303,7 @@ main: MAIN_BLOCK
         }
     instruction_block  
         {
-            // Main block finished
+            // Iesire din main block
         };  
 
 %%

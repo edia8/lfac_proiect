@@ -17,7 +17,7 @@ class SymbolTable {
     //variabile
     enum class VariableType { INT, FLOAT, STRING, BOOL, OBJECT };
 
-    // Container for data: Includes pointer to ClassInstance
+    //pointer to ClassInstance
     struct ClassInstance;
     using VariableData =
         std::variant<int, float, std::string, bool, ClassInstance*>;
@@ -27,11 +27,11 @@ class SymbolTable {
         std::string class_name;
         std::map<std::string, VariableData> properties;
 
-        VariableData * get_proprety(std::string& name){
+        VariableData * get_property(std::string& name){
             if (properties.find(name) != properties.end()) {
                 return &properties[name];
+            }
             return nullptr;
-        }
         }
 
         ClassInstance(std::string name) : class_name(name) {}
@@ -52,10 +52,11 @@ class SymbolTable {
 
         void operator()(ClassInstance* v) {
             if (v){
-                fprintf(out, "%s(", v->class_name.c_str());
+                fprintf(out, " %s(", v->class_name.c_str());
                 for(auto &item : v->properties){
                     fprintf(out, "%s = ", item.first.c_str());
-                    this -> operator()(&item.second);
+                    std::visit(*this, item.second);
+                    fprintf(out," ");
                 }
                 fprintf(out, ")");
             }
@@ -126,20 +127,31 @@ class SymbolTable {
             sym.set_custom_type(object_type);
             // If it's an object, initialize it with a new instance
             if (std::holds_alternative<int>(data) && std::get<int>(data) == 0) {
-                sym.data = (ClassInstance*)new ClassInstance(object_type);
+                // Create the instance
+                ClassInstance* new_instance = new ClassInstance(object_type);
+                
+                // Search for the class definition to populate properties
+                ClassSymbol* class_def = find_class(object_type);
+                if (class_def && class_def->scope) {
+                    for (const auto& [prop_name, prop_sym] : class_def->scope->vars) {
+                        new_instance->properties[prop_name] = prop_sym.data;
+                    }
+                }
+                
+                sym.data = new_instance;
             }
         }
         vars[var_name] = sym;
     }
 
     VarSymbol* get_var(const std::string& var_name) {
-        // 1. Cauta in scopul curent
+        // Cauta in scopul curent
         if (vars.find(var_name) != vars.end()) {
              // std::cout << "[SymbolTable] Found '" << var_name << "' in scope '" << name << "'\n";
              return &vars[var_name];
         }
 
-        // 2. Cauta ecursiv in parinte
+        // Cauta recursiv in parinte
         if (parent) {
             // std::cout << "[SymbolTable] '" << var_name << "' not in '" << name << "', checking parent '" << parent->name << "'\n";
             return parent->get_var(var_name);
